@@ -1,15 +1,14 @@
-import { Text, View } from "react-native";
+import React from "react";
+import { ViroARSceneNavigator } from "@reactvision/react-viro";
+import ARScene from "../components/ARScene";
 
-export default function Index() {
-  return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text>Edit app/index.tsx to edit this screen.</Text>
-    </View>
-  );
+export default function App() {
+	return (
+		<ViroARSceneNavigator
+			initialScene={{
+				scene: ARScene,
+			}}
+			style={{ flex: 1 }}
+		/>
+	);
 }
