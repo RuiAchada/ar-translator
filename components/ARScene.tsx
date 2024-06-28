@@ -4,11 +4,9 @@ import {
 	ViroARScene,
 	ViroText,
 	ViroTrackingStateConstants,
-	ViroARPlaneSelector,
 	ViroNode,
-	ViroButton,
 	ViroFlexView,
-	ViroBox,
+	ViroButton,
 	ViroMaterials,
 } from "@reactvision/react-viro";
 import { detectText, translateText } from "../utils/textProcessing";
@@ -25,69 +23,86 @@ ViroMaterials.createMaterials({
 	},
 });
 
-interface AnchorFoundObject {
+interface DetectedText {
+	text: string;
+	translation: string;
 	position: [number, number, number];
-	rotation: [number, number, number];
-	scale: [number, number, number];
 }
 
 const ARScene: React.FC = () => {
 	const [text, setText] = useState("Initializing AR...");
+	const [detectedTexts, setDetectedTexts] = useState<DetectedText[]>([]);
+	const [isProcessing, setIsProcessing] = useState(false);
 
 	const onInitialized = (
 		state: ViroTrackingStateConstants,
 		reason: string,
 	): void => {
 		if (state === ViroTrackingStateConstants.TRACKING_NORMAL) {
-			setText("Hello World!");
+			setText("AR Ready");
 		} else if (state === ViroTrackingStateConstants.TRACKING_UNAVAILABLE) {
-			setText("Tracking lost.");
+			setText("Tracking lost");
 		}
 	};
 
-	const onPlaneSelected = (anchor: AnchorFoundObject): void => {
-		console.log("Plane selected:", anchor);
-		setText("Plane selected!");
+	const onDetectText = async () => {
+		if (isProcessing) return;
+
+		setIsProcessing(true);
+		setText("Detecting and translating text...");
+
+		try {
+			// This uses the device camera to capture an image
+			// and then process it for text detection
+			const detectedTextAreas = await detectText();
+			const translatedTextAreas = await Promise.all(
+				detectedTextAreas.map(async (area) => ({
+					...area,
+					translation: await translateText(area.text),
+				})),
+			);
+			console.log("Detected text areas:", translatedTextAreas);
+			setDetectedTexts(translatedTextAreas);
+			setText("Text translated");
+		} catch (error) {
+			console.error("Error detecting text:", error);
+			setText("Error detecting text");
+		} finally {
+			setIsProcessing(false);
+		}
 	};
-	/*
-	return (
-		<ViroARScene>
-			<ViroBox
-				position={[0, 0, -1]}
-				scale={[0.3, 0.3, 0.3]}
-				materials={["grid"]}
-			/>
-		</ViroARScene>
-	);
-*/
 
 	return (
-		<ViroARScene
-			anchorDetectionTypes="PlanesHorizontal"
-			onTrackingUpdated={onInitialized}
-		>
+		<ViroARScene onTrackingUpdated={onInitialized}>
 			<ViroText
 				text={text}
-				scale={[0.5, 0.5, 0.5]}
+				scale={[0.3, 0.3, 0.3]}
 				position={[0, 0, -1]}
 				style={{ fontFamily: "Arial", fontSize: 20, color: "white" }}
 			/>
-			{/* Commented out the ViroARPlaneSelector for now
-			<ViroARPlaneSelector
-				minHeight={0.5}
-				minWidth={0.5}
-				alignment={"Horizontal"}
-				onPlaneSelected={onPlaneSelected}
-			>
-				<ViroNode>
-					<ViroText
-						text="Plane Detected"
-						scale={[0.1, 0.1, 0.1]}
-						position={[0, 0, 0]}
-						style={{ fontFamily: "Arial", fontSize: 20, color: "white" }}
-					/>
+			<ViroButton
+				position={[0, -0.5, -1]}
+				scale={[0.1, 0.1, 0.1]}
+				source={require("../assets/images/grid_bg.png")}
+				onClick={onDetectText}
+			/>
+			{detectedTexts.map((item, index) => (
+				<ViroNode key={index} position={item.position}>
+					<ViroFlexView
+						style={{
+							padding: 0.05,
+							backgroundColor: "#FFFFFF80",
+							borderRadius: 0.05,
+						}}
+					>
+						<ViroText
+							text={item.translation}
+							scale={[0.05, 0.05, 0.05]}
+							style={{ fontFamily: "Arial", fontSize: 12, color: "black" }}
+						/>
+					</ViroFlexView>
 				</ViroNode>
-			</ViroARPlaneSelector> */}
+			))}
 		</ViroARScene>
 	);
 };
