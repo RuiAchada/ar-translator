@@ -1,12 +1,36 @@
-//import * as Vision from "@react-native-ml-kit/vision";
+import TextRecognition, {
+	TextRecognitionScript,
+} from "@react-native-ml-kit/text-recognition";
 import axios from "axios";
 
-export const detectText = async (
-	image: Vision.VisionImage,
+export const detectText = async (image: { uri: string }): Promise<
+	DetectedTextBlock[]
+> => {
+	try {
+		const result = await TextRecognition.recognize(
+			image.uri,
+			TextRecognitionScript.JAPANESE,
+		);
+		console.log("RESULT", result);
+		// Process the result and extract the recognized text areas
+		const detectedTextAreas = result.blocks.map((block) => ({
+			text: block.text,
+			position: [0, 0, 0], // This needs to be determined based on the AR setup
+		}));
+
+		return detectedTextAreas;
+	} catch (error) {
+		console.error("Error detecting text:", error);
+		throw error;
+	}
+};
+
+/*export const detectText = async (
+	image: textRecognition.VisionImage,
 ): Promise<DetectedTextBlock[]> => {
 	try {
 		// First let's return an example array of text blocks
-		return [
+		/* 		return [
 			{
 				text: "こんにちは",
 				position: { x: 100, y: 100 },
@@ -16,20 +40,29 @@ export const detectText = async (
 				position: { x: 200, y: 200 },
 			},
 		];
-
-		const result = await Vision.textRecognizer().process(image);
-		return result.blocks.map((block) => ({
+		//const imagePath = require("./example_japanese.png");
+		const imagePath =
+			"https://m.media-amazon.com/images/I/B14v3-UKcgL._SY300_.jpg";
+		console.log("imagePath", imagePath);
+		//const imagePath = "file://./example_japanese.png";
+		const result = await TextRecognition.recognize(
+			imagePath,
+			TextRecognitionScript.JAPANESE,
+		);
+		console.log("RESULT", result);
+		// Process the result and extract the recognized text areas
+		const detectedTextAreas = result.blocks.map((block) => ({
 			text: block.text,
-			position: {
-				x: (block.frame.left + block.frame.right) / 2,
-				y: (block.frame.top + block.frame.bottom) / 2,
-			},
+			//position: [block.boundingBox.left, block.boundingBox.top, 0], // Adjust position as needed
+			position: [0.5, 0.5, 0],
 		}));
+
+		return detectedTextAreas;
 	} catch (error) {
 		console.error("Error detecting text:", error);
 		throw error;
 	}
-};
+};*/
 
 export const translateText = async (text: string): Promise<string> => {
 	try {

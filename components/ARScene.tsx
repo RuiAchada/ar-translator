@@ -1,5 +1,11 @@
 import type React from "react";
-import { forwardRef, useImperativeHandle, useState } from "react";
+import {
+	forwardRef,
+	useImperativeHandle,
+	useState,
+	useRef,
+	useEffect,
+} from "react";
 import {
 	ViroARScene,
 	ViroText,
@@ -7,7 +13,6 @@ import {
 	ViroNode,
 	ViroFlexView,
 } from "@reactvision/react-viro";
-import { detectText, translateText } from "../utils/textProcessing";
 
 interface DetectedText {
 	text: string;
@@ -16,9 +21,8 @@ interface DetectedText {
 }
 
 const ARScene = forwardRef((props, ref) => {
-	const [text, setText] = useState("Initializing AR...");
+	const [logsText, setText] = useState("Initializing AR...");
 	const [detectedTexts, setDetectedTexts] = useState<DetectedText[]>([]);
-	const [isProcessing, setIsProcessing] = useState(false);
 
 	const onInitialized = (
 		state: ViroTrackingStateConstants,
@@ -31,41 +35,10 @@ const ARScene = forwardRef((props, ref) => {
 		}
 	};
 
-	const onDetectText = async () => {
-		if (isProcessing) return;
-
-		setIsProcessing(true);
-		setText("Detecting and translating text...");
-
-		try {
-			// This uses the device camera to capture an image
-			// and then process it for text detection
-			const detectedTextAreas = await detectText();
-			const translatedTextAreas = await Promise.all(
-				detectedTextAreas.map(async (area) => ({
-					...area,
-					translation: await translateText(area.text),
-				})),
-			);
-			console.log("Detected text areas:", translatedTextAreas);
-			setDetectedTexts(translatedTextAreas);
-			setText("Text translated");
-		} catch (error) {
-			console.error("Error detecting text:", error);
-			setText("Error detecting text");
-		} finally {
-			setIsProcessing(false);
-		}
-	};
-
-	useImperativeHandle(ref, () => ({
-		onDetectText,
-	}));
-
 	return (
 		<ViroARScene onTrackingUpdated={onInitialized}>
 			<ViroText
-				text={text}
+				text={logsText}
 				scale={[0.3, 0.3, 0.3]}
 				position={[0, 0, -1]}
 				style={{ fontFamily: "Arial", fontSize: 20, color: "white" }}
