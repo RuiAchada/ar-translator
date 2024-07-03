@@ -11,14 +11,19 @@ export const detectText = async (image: { uri: string }): Promise<
 			image.uri,
 			TextRecognitionScript.JAPANESE,
 		);
-		console.log("RESULT", result);
-		// Process the result and extract the recognized text areas
-		const detectedTextAreas = result.blocks.map((block) => ({
+
+		// Extract blocks with frame data for positioning
+		const blocks = result.blocks.map((block) => ({
 			text: block.text,
-			position: [0, 0, 0], // This needs to be determined based on the AR setup
+			frame: {
+				left: block.frame.left,
+				top: block.frame.top,
+				width: block.frame.width,
+				height: block.frame.height,
+			},
 		}));
 
-		return detectedTextAreas;
+		return blocks;
 	} catch (error) {
 		console.error("Error detecting text:", error);
 		throw error;
