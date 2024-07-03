@@ -27,6 +27,10 @@ export default function App() {
 		width: 0,
 		height: 0,
 	});
+	const [imageDimensions, setImageDimensions] = useState({
+		width: 0,
+		height: 0,
+	});
 
 	const onDetectText = async () => {
 		if (isProcessing || !cameraRef.current) return;
@@ -37,7 +41,12 @@ export default function App() {
 		try {
 			// Capture the image from the camera
 			const photo = await cameraRef.current.takePictureAsync({ base64: true });
-			const image = { uri: photo.uri };
+			const image = {
+				uri: photo.uri,
+				width: photo.width,
+				height: photo.height,
+			};
+			setImageDimensions({ width: photo.width, height: photo.height });
 
 			// Process the captured image for text detection
 			const detectedTextAreas = await detectText(image);
@@ -83,14 +92,23 @@ export default function App() {
 	}
 
 	const renderTextAreas = () => {
-		//console.log("renderTextAreas called with", translatedTextAreas);
+		console.log("renderTextAreas called with", translatedTextAreas);
 		return translatedTextAreas.map((area, index) => {
 			const adjustedFrame = {
-				left: (area.frame.left / 1000) * cameraViewDimensions.width, // Adjust left
-				top: (area.frame.top / 1000) * cameraViewDimensions.height, // Adjust top
-				width: (area.frame.width / 1000) * cameraViewDimensions.width, // Adjust width
-				height: (area.frame.height / 1000) * cameraViewDimensions.height, // Adjust height
+				left:
+					(area.frame.left / imageDimensions.width) *
+					cameraViewDimensions.width,
+				top:
+					(area.frame.top / imageDimensions.height) *
+					cameraViewDimensions.height,
+				width:
+					(area.frame.width / imageDimensions.width) *
+					cameraViewDimensions.width,
+				height:
+					(area.frame.height / imageDimensions.height) *
+					cameraViewDimensions.height,
 			};
+
 			console.log("adjustedFrame", adjustedFrame);
 
 			return (
