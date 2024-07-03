@@ -22,6 +22,11 @@ export default function App() {
 	const [permission, requestPermission] = useCameraPermissions();
 	const cameraRef = useRef(null);
 	const [isProcessing, setIsProcessing] = useState(false);
+	const [translatedTextAreas, setTranslatedTextAreas] = useState([]);
+	const [cameraViewDimensions, setCameraViewDimensions] = useState({
+		width: 0,
+		height: 0,
+	});
 
 	const onDetectText = async () => {
 		if (isProcessing || !cameraRef.current) return;
@@ -31,14 +36,11 @@ export default function App() {
 
 		try {
 			// Capture the image from the camera
-			console.log("capturing image");
 			const photo = await cameraRef.current.takePictureAsync({ base64: true });
 			const image = { uri: photo.uri };
-			console.log("captured image", image);
 
 			// Process the captured image for text detection
 			const detectedTextAreas = await detectText(image);
-			console.log("detected text areas", detectedTextAreas);
 			const translatedTextAreas = await Promise.all(
 				detectedTextAreas.map(async (area) => ({
 					...area,
@@ -46,7 +48,8 @@ export default function App() {
 				})),
 			);
 
-			console.log("Detected text areas:", translatedTextAreas);
+			setTranslatedTextAreas(translatedTextAreas); // Save the translated text areas
+
 			//setDetectedTexts(translatedTextAreas);
 			//setText("Text translated");
 		} catch (error) {
@@ -79,9 +82,48 @@ export default function App() {
 		);
 	}
 
+	const renderTextAreas = () => {
+		//console.log("renderTextAreas called with", translatedTextAreas);
+		return translatedTextAreas.map((area, index) => {
+			const adjustedFrame = {
+				left: (area.frame.left / 1000) * cameraViewDimensions.width, // Adjust left
+				top: (area.frame.top / 1000) * cameraViewDimensions.height, // Adjust top
+				width: (area.frame.width / 1000) * cameraViewDimensions.width, // Adjust width
+				height: (area.frame.height / 1000) * cameraViewDimensions.height, // Adjust height
+			};
+			console.log("adjustedFrame", adjustedFrame);
+
+			return (
+				<View
+					key={index}
+					style={[
+						styles.textArea,
+						{
+							left: adjustedFrame.left,
+							top: adjustedFrame.top,
+							width: adjustedFrame.width,
+							height: adjustedFrame.height,
+						},
+					]}
+				>
+					<Text style={styles.text}>{area.translation}</Text>
+				</View>
+			);
+		});
+	};
+
 	return (
 		<View style={{ flex: 1 }}>
-			<CameraView style={{ flex: 1 }} facing="back" ref={cameraRef} />
+			<CameraView
+				style={{ flex: 1 }}
+				facing="back"
+				ref={cameraRef}
+				onLayout={(event) => {
+					const { width, height } = event.nativeEvent.layout;
+					setCameraViewDimensions({ width, height });
+				}}
+			/>
+			<View style={StyleSheet.absoluteFillObject}>{renderTextAreas()}</View>
 			{/* 	<ViroARSceneNavigator
 				initialScene={{ scene: ARScene, passProps: { ref: arSceneRef } }}
 				autofocus={true}
@@ -107,6 +149,10 @@ const styles = StyleSheet.create({
 	},
 	buttonContainer: {
 		marginBottom: 20,
+		position: "absolute",
+		bottom: 0,
+		width: "100%",
+		alignItems: "center",
 	},
 	button: {
 		padding: 10,
@@ -117,5 +163,16 @@ const styles = StyleSheet.create({
 		color: "#FFF",
 		fontSize: 16,
 		textAlign: "center",
+	},
+	textArea: {
+		position: "absolute",
+		borderColor: "red",
+		borderWidth: 2,
+		backgroundColor: "rgba(255, 255, 255, 0.8)",
+		zIndex: 1000, // Ensures text areas are above the camera view
+	},
+	text: {
+		fontSize: 12,
+		color: "black",
 	},
 });
