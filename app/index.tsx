@@ -104,9 +104,10 @@ export default function App() {
 				width:
 					(area.frame.width / imageDimensions.width) *
 					cameraViewDimensions.width,
-				height:
-					(area.frame.height / imageDimensions.height) *
-					cameraViewDimensions.height,
+				//height:
+				//(area.frame.height / imageDimensions.height) *
+				//cameraViewDimensions.height,
+				// Height is handled dynamically
 			};
 
 			console.log("adjustedFrame", adjustedFrame);
@@ -120,7 +121,7 @@ export default function App() {
 							left: adjustedFrame.left,
 							top: adjustedFrame.top,
 							width: adjustedFrame.width,
-							height: adjustedFrame.height,
+							//height: adjustedFrame.height, // We let the height adjust dynamically
 						},
 					]}
 				>
