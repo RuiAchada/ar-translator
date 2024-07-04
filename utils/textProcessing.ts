@@ -71,16 +71,16 @@ export const detectText = async (image: { uri: string }): Promise<
 
 export const translateText = async (text: string): Promise<string> => {
 	try {
-		return "THIS IS TRANSLATED TEXT";
-		const response = await axios.post<{ translated_text: string }>(
-			"TRANSLATION_API_ENDPOINT",
+		const response = await axios.get(
+			"https://api.mymemory.translated.net/get",
 			{
-				text: text,
-				source_language: "ja",
-				target_language: "en",
+				params: {
+					q: text,
+					langpair: "ja|en",
+				},
 			},
 		);
-		return response.data.translated_text;
+		return response.data.responseData.translatedText;
 	} catch (error) {
 		console.error("Error translating text:", error);
 		throw error;
