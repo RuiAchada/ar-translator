@@ -185,13 +185,12 @@ const styles = StyleSheet.create({
 	},
 	textArea: {
 		position: "absolute",
-		borderColor: "red",
-		borderWidth: 2,
 		backgroundColor: "rgba(255, 255, 255, 0.8)",
 		zIndex: 1000, // Ensures text areas are above the camera view
 	},
 	text: {
-		fontSize: 12,
+		fontSize: 14,
 		color: "black",
+		fontWeight: "bold",
 	},
 });
