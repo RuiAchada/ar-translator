@@ -13,6 +13,20 @@ import {
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { detectText, translateText } from "../utils/textProcessing";
 
+interface DetectedTextBlock {
+	text: string;
+	frame: {
+		left: number;
+		top: number;
+		width: number;
+		height: number;
+	};
+}
+
+interface TranslatedTextBlock extends DetectedTextBlock {
+	translation: string;
+}
+
 const initialScene = {
 	scene: ARScene,
 };
@@ -22,7 +36,9 @@ export default function App() {
 	const [permission, requestPermission] = useCameraPermissions();
 	const cameraRef = useRef(null);
 	const [isProcessing, setIsProcessing] = useState(false);
-	const [translatedTextAreas, setTranslatedTextAreas] = useState([]);
+	const [translatedTextAreas, setTranslatedTextAreas] = useState<
+		TranslatedTextBlock[]
+	>([]);
 	const [cameraViewDimensions, setCameraViewDimensions] = useState({
 		width: 0,
 		height: 0,
@@ -50,14 +66,11 @@ export default function App() {
 
 			// Process the captured image for text detection
 			const detectedTextAreas = await detectText(image);
-			const translatedTextAreas = await Promise.all(
-				detectedTextAreas.map(async (area) => ({
-					...area,
-					translation: await translateText(area.text),
-				})),
-			);
-
-			setTranslatedTextAreas(translatedTextAreas); // Save the translated text areas
+			// Translate each detected text block asynchronously and update the state one by one
+			for (const area of detectedTextAreas) {
+				const translation = await translateText(area.text);
+				setTranslatedTextAreas((prev) => [...prev, { ...area, translation }]);
+			}
 
 			//setDetectedTexts(translatedTextAreas);
 			//setText("Text translated");
