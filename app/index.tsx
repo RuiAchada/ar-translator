@@ -54,6 +54,9 @@ export default function App() {
 		setIsProcessing(true);
 		//setText("Detecting and translating text...");
 
+		// Clear previous text areas
+		setTranslatedTextAreas([]);
+
 		try {
 			// Capture the image from the camera
 			const photo = await cameraRef.current.takePictureAsync({ base64: true });
