@@ -1,6 +1,10 @@
 import TextRecognition, {
 	TextRecognitionScript,
 } from "@react-native-ml-kit/text-recognition";
+//import TranslateText, {
+//  TranslateLanguage,
+//} from '@react-native-ml-kit/translate-text'; // other package to translate
+
 import axios from "axios";
 
 export const detectText = async (image: { uri: string }): Promise<
@@ -12,16 +16,24 @@ export const detectText = async (image: { uri: string }): Promise<
 			TextRecognitionScript.JAPANESE,
 		);
 
+		console.log("Detected text: ", result);
+
+		// Regular expression to match Japanese characters
+		const japaneseRegex =
+			/[\u3000-\u303F\u3040-\u309F\u30A0-\u30FF\uFF00-\uFFEF]/;
+
 		// Extract blocks with frame data for positioning
-		const blocks = result.blocks.map((block) => ({
-			text: block.text,
-			frame: {
-				left: block.frame.left,
-				top: block.frame.top,
-				width: block.frame.width,
-				height: block.frame.height,
-			},
-		}));
+		const blocks = result.blocks
+			.filter((block) => japaneseRegex.test(block.text)) // ignore non-Japanese text
+			.map((block) => ({
+				text: block.text,
+				frame: {
+					left: block.frame.left,
+					top: block.frame.top,
+					width: block.frame.width,
+					height: block.frame.height,
+				},
+			}));
 
 		return blocks;
 	} catch (error) {
